@@ -1,0 +1,32 @@
+.DS_Store
+**/.env
+**/target/
+.idea/
+
+# Lokale .terraform Verzeichnisse (Provider-Binärdateien)
+**/.terraform/*
+
+# .tfstate Dateien (Zustand und sensible Daten)
+*.tfstate
+*.tfstate.*
+
+# Crash-Logdateien
+crash.log
+crash.*.log
+
+# Variablendateien (enthalten oft sensible Daten)
+*.tfvars
+*.tfvars.json
+
+# Override-Dateien für lokale Änderungen
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# CLI-Konfigurationsdateien
+.terraformrc
+terraform.rc
+
+# Lock-Datei (optional, je nach Teamkonvention)
+.terraform.lock.hcl
