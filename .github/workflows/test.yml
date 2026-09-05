@@ -3,13 +3,8 @@ name: Tests & Release
 on:
   pull_request:
     branches: [ main ]
-    paths:
-      - 'service_patient/**'
-      - '.github/workflows/test.yml'
   push:
     branches: [ main ]
-    paths:
-      - 'service_patient/**'
 
 env:
   CARGO_TERM_COLOR: always
