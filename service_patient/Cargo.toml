@@ -1,0 +1,26 @@
+[package]
+name = "service_patient"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "patient-server"
+path = "src/server.rs"
+
+[dependencies]
+dotenvy = "0.15.7"
+tonic = "0.14.6"
+tonic-prost = "0.14.6"
+tonic-reflection = "0.14.6"
+prost = "0.14.4"
+prost-types = "0.14.4"
+tokio = { version = "1.53.1", features = ["macros", "rt-multi-thread"] }
+uuid = { version = "1.25.0", features = ["v4", "serde"] }
+diesel = { version = "2.2.0", features = ["postgres", "uuid", "chrono", "r2d2"] }
+chrono = { version = "0.4", features = ["serde"] }
+lapin = "4.10.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[build-dependencies]
+tonic-prost-build = "0.14.6"

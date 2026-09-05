@@ -1,0 +1,10 @@
+### Add new patient
+GRPC http://localhost:50051/de.trustrust.grpc.patients.PatientService/Add
+
+{
+  "first_name": "Rico",
+  "last_name": "Schulz"
+}
+
+### Load all patients
+GRPC http://localhost:50051/de.trustrust.grpc.patients.PatientService/GetAll

@@ -1,0 +1,12 @@
+[build]
+rustflags = [
+    "-L",
+    "/opt/homebrew/opt/libpq/lib",
+    "-L",
+    "/opt/homebrew/lib",
+]
+
+[env]
+LDFLAGS = "-L/opt/homebrew/opt/libpq/lib"
+CPPFLAGS = "-I/opt/homebrew/opt/libpq/include"
+LD_LIBRARY_PATH = "/opt/homebrew/opt/libpq/lib"
