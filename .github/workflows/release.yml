@@ -1,0 +1,72 @@
+name: Release
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  semantic-release-dry-run:
+    name: Semantic Release (Dry Run)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Install semantic-release and plugins
+        run: npm install -g semantic-release @semantic-release/changelog @semantic-release/git @semantic-release/github @semantic-release/exec
+
+      - name: Display current version
+        run: |
+          VERSION=$(grep '^version' service_patient/Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          echo "🔖 Current version: $VERSION"
+
+      - name: Run semantic-release dry run
+        working-directory: ./service_patient
+        run: semantic-release --dry-run
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  semantic-release:
+    name: Semantic Release
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Install semantic-release and plugins
+        run: npm install -g semantic-release @semantic-release/changelog @semantic-release/git @semantic-release/github @semantic-release/exec
+
+      - name: Run semantic-release
+        working-directory: ./service_patient
+        run: semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Display release version
+        if: success()
+        run: |
+          # Get the latest tag (newly created by semantic-release)
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "no tags yet")
+          echo "🚀 Release created: $LATEST_TAG"

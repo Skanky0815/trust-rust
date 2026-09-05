@@ -1,4 +1,4 @@
-name: Tests & Release
+name: Tests
 
 on:
   pull_request:
@@ -40,6 +40,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Display version
+        run: |
+          VERSION=$(grep '^version' service_patient/Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          echo "🔖 Testing version: $VERSION"
 
       - name: Install protobuf compiler
         run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
@@ -90,56 +95,3 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
       - uses: dtolnay/rust-toolchain@stable
       - run: cd service_patient && cargo clippy --all-targets --all-features -- -D warnings
-
-  semantic-release-dry-run:
-    name: Semantic Release (Dry Run)
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Install Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: lts/*
-
-      - name: Install semantic-release and plugins
-        run: npm install -g semantic-release @semantic-release/changelog @semantic-release/git @semantic-release/github
-
-      - name: Run semantic-release dry run
-        working-directory: ./service_patient
-        run: semantic-release --dry-run
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  semantic-release:
-    name: Semantic Release
-    runs-on: ubuntu-latest
-    needs: [ test, fmt, clippy ]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Configure git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Install Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: lts/*
-
-      - name: Install semantic-release and plugins
-        run: npm install -g semantic-release @semantic-release/changelog @semantic-release/git @semantic-release/github
-
-      - name: Run semantic-release
-        working-directory: ./service_patient
-        run: semantic-release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
