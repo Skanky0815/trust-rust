@@ -8,6 +8,12 @@ resource "github_repository" "trust_rust" {
   delete_branch_on_merge = true
 }
 
+resource "github_branch_default" "main_branch" {
+  branch     = "main"
+  repository = var.repository_name
+  rename     = true
+}
+
 resource "github_repository_ruleset" "main_protection" {
   enforcement = "active"
   name        = "Main Protection"
