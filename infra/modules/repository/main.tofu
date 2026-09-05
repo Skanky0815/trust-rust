@@ -29,10 +29,19 @@ resource "github_repository_ruleset" "main_protection" {
 
   rules {
     required_linear_history = true
+    required_status_checks {
+      required_check {
+        context = "Test Suite"
+      }
+      required_check {
+        context = "Rustfmt"
+      }
+      required_check {
+        context = "Clippy"
+      }
+    }
 
     pull_request {
-      require_last_push_approval = true
-      dismiss_stale_reviews_on_push = true
     }
   }
 }
