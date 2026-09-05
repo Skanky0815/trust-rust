@@ -65,8 +65,8 @@ impl PatientService {
 
     async fn publish_patient_event(&self, patient: &Patient) -> Result<(), String> {
         let event = PatientEvent::new(patient.clone());
-        let payload = serde_json::to_vec(&event)
-            .map_err(|e| format!("Failed to serialize event: {}", e))?;
+        let payload =
+            serde_json::to_vec(&event).map_err(|e| format!("Failed to serialize event: {}", e))?;
 
         self.channel
             .basic_publish(
@@ -98,7 +98,10 @@ mod tests {
 
         let result = PatientService::validate_patient(&patient);
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), "First name cannot be empty".to_string());
+        assert_eq!(
+            result.unwrap_err(),
+            "First name cannot be empty".to_string()
+        );
     }
 
     #[test]
