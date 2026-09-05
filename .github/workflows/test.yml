@@ -41,6 +41,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install protobuf compiler
+        run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
@@ -73,6 +76,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install protobuf compiler
+        run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
       - uses: dtolnay/rust-toolchain@stable
       - run: cd service_patient && cargo fmt --all -- --check
 
@@ -81,6 +86,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install protobuf compiler
+        run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
       - uses: dtolnay/rust-toolchain@stable
       - run: cd service_patient && cargo clippy --all-targets --all-features -- -D warnings
 
@@ -98,7 +105,7 @@ jobs:
         with:
           node-version: lts/*
 
-      - name: Install semantic-release
+      - name: Install semantic-release and plugins
         run: npm install -g semantic-release @semantic-release/changelog @semantic-release/git @semantic-release/github
 
       - name: Run semantic-release dry run
@@ -116,13 +123,19 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: lts/*
 
-      - name: Install semantic-release
+      - name: Install semantic-release and plugins
         run: npm install -g semantic-release @semantic-release/changelog @semantic-release/git @semantic-release/github
 
       - name: Run semantic-release
