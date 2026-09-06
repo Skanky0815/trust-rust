@@ -1,5 +1,5 @@
 use crate::schema::patients;
-use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use diesel::{Insertable, Queryable, Selectable};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -9,9 +9,12 @@ use uuid::Uuid;
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Patient {
     pub id: Uuid,
+    pub external_id: Option<String>,
     pub first_name: String,
     pub last_name: String,
-    pub created_at: Option<NaiveDateTime>,
+    pub date_of_birth: Option<NaiveDate>,
+    pub insurance_number: Option<String>,
+    pub created_at: NaiveDateTime,
 }
 
 #[derive(Insertable, Debug, Clone)]

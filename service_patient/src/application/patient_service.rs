@@ -7,7 +7,7 @@ use crate::application::patient_service::grpc::{
     PatientListResponse, PatientRequest, PatientResponse,
 };
 use crate::infrastructure::database::DbPool;
-use crate::module::patient::model::NewPatient;
+use crate::module::patient::model::{NewPatient, Patient};
 use crate::module::patient::service::PatientService;
 
 pub mod grpc {
@@ -45,11 +45,7 @@ impl PatientGrpcService for Service {
             Status::internal("Failed to add patient")
         })?;
 
-        let response = PatientResponse {
-            id: patient.id.to_string(),
-            first_name: patient.first_name,
-            last_name: patient.last_name,
-        };
+        let response = patient.to_response();
 
         Ok(Response::new(response))
     }
@@ -68,13 +64,22 @@ impl PatientGrpcService for Service {
         let mut records = Vec::new();
 
         for patient in patients {
-            records.push(PatientResponse {
-                id: patient.id.to_string(),
-                first_name: patient.first_name,
-                last_name: patient.last_name,
-            });
+            records.push(patient.to_response());
         }
 
         Ok(Response::new(PatientListResponse { patients: records }))
+    }
+}
+
+impl Patient {
+    fn to_response(&self) -> PatientResponse {
+        PatientResponse {
+            id: self.id.to_string(),
+            first_name: self.first_name.clone(),
+            last_name: self.last_name.clone(),
+            external_id: self.external_id.clone(),
+            date_of_birth: self.date_of_birth.map(|date| date.to_string()),
+            insurance_number: self.insurance_number.clone(),
+        }
     }
 }
