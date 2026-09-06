@@ -129,9 +129,7 @@ impl PatientGrpcService for Service {
 
 impl Patient {
     fn to_response(&self) -> PatientResponse {
-        let age = self
-            .date_of_birth
-            .map(|date_of_birth| to_age(date_of_birth));
+        let age = self.date_of_birth.map(to_age);
 
         PatientResponse {
             id: self.id.to_string(),
