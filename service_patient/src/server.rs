@@ -3,12 +3,13 @@ mod infrastructure;
 pub mod module;
 pub mod schema;
 
-use crate::application::patient_service::{
-    grpc::patient_service_server::PatientServiceServer, grpc::FILE_DESCRIPTOR_SET, Service,
-};
+use crate::application::patient_service::Service;
 use crate::infrastructure::database::setup_database_with_migration;
 use crate::infrastructure::queue::setup_queue;
 use dotenvy::dotenv;
+use patient_proto::patient_grpc::{
+    patient_service_server::PatientServiceServer, FILE_DESCRIPTOR_SET,
+};
 use prost::Message;
 use tonic::transport::Server;
 use tonic_reflection::server::Builder;

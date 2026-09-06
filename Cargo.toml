@@ -1,0 +1,10 @@
+[workspace]
+members = [
+    "proto/patient-proto",
+    "service_patient"
+]
+resolver = "2"
+
+[workspace.dependencies]
+tonic = "0.14.6"
+prost = "0.14.4"
