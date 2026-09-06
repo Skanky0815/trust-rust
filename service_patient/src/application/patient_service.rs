@@ -1,24 +1,17 @@
-use crate::application::patient_service::grpc::patient_service_server::PatientService as PatientGrpcService;
-use crate::application::patient_service::grpc::{
-    get_patient_request, GetPatientRequest, PatientListResponse, PatientRequest, PatientResponse,
-    UpdatePatientRequest,
-};
 use crate::infrastructure::database::DbPool;
 use crate::module::patient::model::{NewPatient, Patient, UpdatePatient};
 use crate::module::patient::service::PatientService;
 use chrono::Datelike;
 use chrono::NaiveDate;
 use lapin::Channel;
+use patient_proto::patient_grpc::patient_service_server::PatientService as PatientGrpcService;
+use patient_proto::patient_grpc::{
+    get_patient_request, GetPatientRequest, PatientListResponse, PatientRequest, PatientResponse,
+    UpdatePatientRequest,
+};
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
 use uuid::Uuid;
-
-pub mod grpc {
-    tonic::include_proto!("de.trustrust.grpc.patients");
-
-    pub(crate) const FILE_DESCRIPTOR_SET: &[u8] =
-        tonic::include_file_descriptor_set!("patients_descriptor");
-}
 
 #[derive(Clone)]
 pub struct Service {
@@ -41,7 +34,7 @@ impl PatientGrpcService for Service {
     ) -> Result<Response<PatientResponse>, Status> {
         let req = request.into_inner();
 
-        let new_patient = req.to_new_patient();
+        let new_patient = map_to_new_patient(req);
 
         let patient = self.patient_server.add(new_patient).await.map_err(|e| {
             eprintln!("Error adding patient: {:?}", e);
@@ -117,7 +110,7 @@ impl PatientGrpcService for Service {
     ) -> Result<Response<PatientResponse>, Status> {
         let req = request.into_inner();
 
-        let update_patient = req.to_update_patient();
+        let update_patient = map_to_update_patient(req);
 
         let patient = self
             .patient_server
@@ -151,36 +144,30 @@ impl Patient {
     }
 }
 
-impl PatientRequest {
-    fn to_new_patient(&self) -> NewPatient {
-        NewPatient::new(self.first_name.clone(), self.last_name.clone())
-    }
+fn map_to_new_patient(patient_request: PatientRequest) -> NewPatient {
+    NewPatient::new(patient_request.first_name, patient_request.last_name)
 }
 
-impl UpdatePatientRequest {
-    fn to_update_patient(&self) -> UpdatePatient {
-        let date_of_birth = self
-            .date_of_birth
-            .as_ref()
-            .map(|date| {
-                NaiveDate::parse_from_str(date, "%Y-%m-%d").map_err(|_| {
-                    Status::invalid_argument(
-                        "Invalid date format. It must be in the format YYYY-MM-DD",
-                    )
-                })
+fn map_to_update_patient(update_patient_request: UpdatePatientRequest) -> UpdatePatient {
+    let date_of_birth = update_patient_request
+        .date_of_birth
+        .as_ref()
+        .map(|date| {
+            NaiveDate::parse_from_str(date, "%Y-%m-%d").map_err(|_| {
+                Status::invalid_argument("Invalid date format. It must be in the format YYYY-MM-DD")
             })
-            .transpose()
-            .unwrap();
+        })
+        .transpose()
+        .unwrap();
 
-        UpdatePatient {
-            id: Uuid::parse_str(&self.id).unwrap(),
-            external_id: self.external_id.clone(),
-            first_name: self.first_name.clone(),
-            last_name: self.last_name.clone(),
-            date_of_birth,
-            insurance_number: self.insurance_number.clone(),
-            updated_at: chrono::Utc::now().naive_utc(),
-        }
+    UpdatePatient {
+        id: Uuid::parse_str(&update_patient_request.id).unwrap(),
+        external_id: update_patient_request.external_id,
+        first_name: update_patient_request.first_name,
+        last_name: update_patient_request.last_name,
+        date_of_birth,
+        insurance_number: update_patient_request.insurance_number,
+        updated_at: chrono::Utc::now().naive_utc(),
     }
 }
 
