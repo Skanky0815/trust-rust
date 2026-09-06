@@ -6,12 +6,25 @@ import "google/protobuf/empty.proto";
 
 service PatientService {
   rpc Add(PatientRequest) returns (PatientResponse);
+  rpc Get(GetPatientRequest) returns (PatientResponse);
   rpc GetAll(google.protobuf.Empty) returns (PatientListResponse);
 }
 
 message PatientRequest {
   string first_name = 1;
   string last_name = 2;
+}
+
+message GetPatientRequest {
+  oneof search {
+    string external_id = 1;
+    SearchCriteria search_criteria = 2;
+  }
+}
+
+message SearchCriteria {
+  string date_of_birth = 1;
+  string insurance_number = 2;
 }
 
 message PatientResponse {

@@ -1,10 +1,11 @@
+use chrono::NaiveDate;
 use lapin::Channel;
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
 
 use crate::application::patient_service::grpc::patient_service_server::PatientService as PatientGrpcService;
 use crate::application::patient_service::grpc::{
-    PatientListResponse, PatientRequest, PatientResponse,
+    get_patient_request, GetPatientRequest, PatientListResponse, PatientRequest, PatientResponse,
 };
 use crate::infrastructure::database::DbPool;
 use crate::module::patient::model::{NewPatient, Patient};
@@ -38,11 +39,44 @@ impl PatientGrpcService for Service {
     ) -> Result<Response<PatientResponse>, Status> {
         let req = request.into_inner();
 
-        let new_patient = NewPatient::new(req.first_name, req.last_name);
+        let new_patient = req.to_new_patient();
 
         let patient = self.patient_server.add(new_patient).await.map_err(|e| {
             eprintln!("Error adding patient: {:?}", e);
             Status::internal("Failed to add patient")
+        })?;
+
+        let response = patient.to_response();
+
+        Ok(Response::new(response))
+    }
+
+    async fn get(
+        &self,
+        request: Request<GetPatientRequest>,
+    ) -> Result<Response<PatientResponse>, Status> {
+        let search = request
+            .into_inner()
+            .search
+            .expect("Search parameter is required");
+
+        let patient = match search {
+            get_patient_request::Search::ExternalId(external_id) => {
+                self.patient_server.get_by_external_id(external_id).await
+            }
+            get_patient_request::Search::SearchCriteria(criteria) => {
+                let search_date_of_birth =
+                    NaiveDate::parse_from_str(&criteria.date_of_birth, "%Y-%m-%d")
+                        .map_err(|_| Status::invalid_argument("Invalid date format. It must be in the format YYYY-MM-DD"))?;
+
+                self.patient_server
+                    .get_by_search_criteria(search_date_of_birth, criteria.insurance_number)
+                    .await
+            }
+        }
+        .map_err(|e| {
+            eprintln!("Error getting patient: {:?}", e);
+            Status::not_found("No Patient found for the given criteria")
         })?;
 
         let response = patient.to_response();
@@ -81,5 +115,14 @@ impl Patient {
             date_of_birth: self.date_of_birth.map(|date| date.to_string()),
             insurance_number: self.insurance_number.clone(),
         }
+    }
+}
+
+impl PatientRequest {
+    fn to_new_patient(&self) -> NewPatient {
+        NewPatient::new(
+            self.first_name.clone(),
+            self.last_name.clone(),
+        )
     }
 }
