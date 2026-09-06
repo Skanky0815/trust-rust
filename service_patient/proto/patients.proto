@@ -18,6 +18,9 @@ message PatientResponse {
   string id = 1;
   string first_name = 2;
   string last_name = 3;
+  optional string external_id = 4;
+  optional string date_of_birth = 5;
+  optional string insurance_number = 6;
 }
 
 message PatientListResponse {
