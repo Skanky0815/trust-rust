@@ -1,5 +1,5 @@
 use crate::infrastructure::database::DbPool;
-use crate::module::patient::model::{NewPatient, Patient, PatientEvent};
+use crate::module::patient::model::{NewPatient, Patient, PatientEvent, UpdatePatient};
 use crate::schema::patients;
 use chrono::NaiveDate;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
@@ -81,7 +81,27 @@ impl PatientService {
         .await
         .map_err(|_| "Task error".to_string())??;
 
-        self.publish_patient_event(&patient).await?;
+        self.publish_patient_event("new_patient", &patient).await?;
+
+        Ok(patient)
+    }
+
+    pub async fn update(&self, update_patient: UpdatePatient) -> Result<Patient, String> {
+        let db = self.db.clone();
+
+        let patient = tokio::task::spawn_blocking(move || {
+            let mut conn = db.get().map_err(|_| "Connection pool error".to_string())?;
+
+            diesel::update(&update_patient)
+                .set(&update_patient)
+                .get_result::<Patient>(&mut conn)
+                .map_err(|_| "Update error".to_string())
+        })
+        .await
+        .map_err(|err| err.to_string())??;
+
+        self.publish_patient_event("updated_patient", &patient)
+            .await?;
 
         Ok(patient)
     }
@@ -99,7 +119,11 @@ impl PatientService {
         .map_err(|_| "Task error".to_string())?
     }
 
-    async fn publish_patient_event(&self, patient: &Patient) -> Result<(), String> {
+    async fn publish_patient_event(
+        &self,
+        event_name: &str,
+        patient: &Patient,
+    ) -> Result<(), String> {
         let event = PatientEvent::new(patient.clone());
         let payload =
             serde_json::to_vec(&event).map_err(|e| format!("Failed to serialize event: {}", e))?;
@@ -107,7 +131,7 @@ impl PatientService {
         self.channel
             .basic_publish(
                 "".into(),
-                "new_patient".into(),
+                event_name.into(),
                 lapin::options::BasicPublishOptions::default(),
                 &payload,
                 lapin::BasicProperties::default(),
