@@ -135,6 +135,63 @@ infrastructure/queue.rs
 RabbitMQ
 ```
 
+## 🔗 API Endpoints (gRPC)
+
+### Patient Service Endpoints
+
+#### Add new patient
+```
+GRPC http://localhost:50051/de.trustrust.grpc.patients.PatientService/Add
+
+{
+  "first_name": "Rico",
+  "last_name": "Schulz"
+}
+```
+
+#### Load all patients
+```
+GRPC http://localhost:50051/de.trustrust.grpc.patients.PatientService/GetAll
+```
+
+#### Search patient by date_of_birth and insurance_number
+```
+GRPC http://localhost:50051/de.trustrust.grpc.patients.PatientService/Get
+Content-Type: application/json
+
+{
+  "search_criteria": {
+    "date_of_birth": "1988-06-07",
+    "insurance_number": "D123456789"
+  }
+}
+```
+
+#### Search patient by external_id
+```
+GRPC http://localhost:50051/de.trustrust.grpc.patients.PatientService/Get
+Content-Type: application/json
+
+{
+  "external_id": "EXT-42"
+}
+```
+
+#### Partial update patient
+```
+GRPC http://localhost:50051/de.trustrust.grpc.patients.PatientService/Update
+Content-Type: application/json
+
+{
+  "id": "2219a8aa-31a9-4658-bd9f-5fc29b961520",
+  "date_of_birth": "1988-06-07",
+  "insurance_number": "A123456789",
+  "external_id": "EXT-42"
+}
+```
+
+Weitere Endpoints und Beispiele finden sich in `.dev/patient.http`.
+
 ## 📝 Umgebungsvariablen
 
 ### Development (.env / .cargo/config.toml)
