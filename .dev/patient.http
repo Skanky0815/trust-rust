@@ -8,3 +8,22 @@ GRPC http://localhost:50051/de.trustrust.grpc.patients.PatientService/Add
 
 ### Load all patients
 GRPC http://localhost:50051/de.trustrust.grpc.patients.PatientService/GetAll
+
+### Search patient by date_of_birth and ensurence_number
+GRPC http://localhost:50051/de.trustrust.grpc.patients.PatientService/Get
+Content-Type: application/json
+
+{
+  "search_criteria": {
+    "date_of_birth": "1988-06-07",
+    "insurance_number": "D123456789"
+  }
+}
+
+### Search patient by external_id
+GRPC http://localhost:50051/de.trustrust.grpc.patients.PatientService/Get
+Content-Type: application/json
+
+{
+  "external_id": "ext-42"
+}

@@ -1,7 +1,8 @@
 use crate::infrastructure::database::DbPool;
 use crate::module::patient::model::{NewPatient, Patient, PatientEvent};
 use crate::schema::patients;
-use diesel::RunQueryDsl;
+use chrono::NaiveDate;
+use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 use lapin::Channel;
 use std::sync::Arc;
 
@@ -27,6 +28,41 @@ impl PatientService {
             return Err("Last name cannot be empty".to_string());
         }
         Ok(())
+    }
+
+    pub async fn get_by_external_id(&self, search_external_id: String) -> Result<Patient, String> {
+        let db = self.db.clone();
+
+        tokio::task::spawn_blocking(move || {
+            let mut conn = db.get().map_err(|_| "Connection pool error".to_string())?;
+
+            patients::table
+                .filter(patients::external_id.eq(search_external_id))
+                .first::<Patient>(&mut conn)
+                .map_err(|_| "Load error".to_string())
+        })
+        .await
+        .map_err(|_| "Task error".to_string())?
+    }
+
+    pub async fn get_by_search_criteria(
+        &self,
+        search_date_of_birth: NaiveDate,
+        search_insurance_number: String,
+    ) -> Result<Patient, String> {
+        let db = self.db.clone();
+
+        tokio::task::spawn_blocking(move || {
+            let mut conn = db.get().map_err(|_| "Connection pool error".to_string())?;
+
+            patients::table
+                .filter(patients::date_of_birth.eq(search_date_of_birth))
+                .filter(patients::insurance_number.eq(search_insurance_number))
+                .first::<Patient>(&mut conn)
+                .map_err(|_| "Load error".to_string())
+        })
+        .await
+        .map_err(|_| "Task error".to_string())?
     }
 
     pub async fn add(&self, new_patient: NewPatient) -> Result<Patient, String> {
