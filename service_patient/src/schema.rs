@@ -13,5 +13,6 @@ diesel::table! {
         #[max_length = 10]
         insurance_number -> Nullable<Varchar>,
         created_at -> Timestamp,
+        updated_at -> Timestamp,
     }
 }

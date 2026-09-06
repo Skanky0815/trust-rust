@@ -1,6 +1,6 @@
 use crate::schema::patients;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
-use diesel::{Insertable, Queryable, Selectable};
+use diesel::{AsChangeset, Identifiable, Insertable, Queryable, Selectable};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -15,6 +15,7 @@ pub struct Patient {
     pub date_of_birth: Option<NaiveDate>,
     pub insurance_number: Option<String>,
     pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
 }
 
 #[derive(Insertable, Debug, Clone)]
@@ -33,6 +34,18 @@ impl NewPatient {
             last_name,
         }
     }
+}
+
+#[derive(Identifiable, AsChangeset)]
+#[diesel(table_name = patients)]
+pub struct UpdatePatient {
+    pub id: Uuid,
+    pub external_id: Option<String>,
+    pub first_name: Option<String>,
+    pub last_name: Option<String>,
+    pub date_of_birth: Option<NaiveDate>,
+    pub insurance_number: Option<String>,
+    pub updated_at: NaiveDateTime,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
